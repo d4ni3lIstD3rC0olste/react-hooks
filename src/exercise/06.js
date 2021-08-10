@@ -7,28 +7,31 @@ import { fetchPokemon, PokemonInfoFallback, PokemonDataView, PokemonForm } from 
 
 function PokemonInfo({pokemonName}) {
   // 🐨 Have state for the pokemon (null)
-  const [pokemon, setPokemon] = React.useState(null);
-  const [error, setError] = React.useState(null);
-  const [status, setStatus] = React.useState('idle');
+
+  const initialState = {
+    status: 'idle',
+    pokemon: null,
+    error: null,
+  }
+
+  const [state, setState] = React.useState(initialState);
 
   React.useEffect(() => {
     if (!pokemonName) {
       return;
     }
-    setPokemon(null);
-    setError(null);
-    setStatus('pending');
+    setState({
+      status: 'pending',
+    });
 
     fetchPokemon(pokemonName).then(
-      pokemonData => {
-        setPokemon(pokemonData);
-        setStatus('resolved');
-      }, 
-      error => {
-        setError(error);
-        setPokemon(null);
-        setStatus('rejected');
-      }
+      pokemonData => setState({
+        pokemon: pokemonData,
+        status: 'resolved',
+      }), error => setState({
+        error,
+        status: 'rejected',
+      })
     );
   }, [pokemonName]);
 
@@ -43,17 +46,17 @@ function PokemonInfo({pokemonName}) {
       }
     </div> 
   );*/
-  switch (status) {
+  switch (state.status) {
     case 'idle': 
       return 'Submit a pokemon';
     case 'pending':
       return <PokemonInfoFallback name={pokemonName} />;
     case 'resolved':
-      return <PokemonDataView pokemon={pokemon} />;
+      return <PokemonDataView pokemon={state.pokemon} />;
     case 'rejected':
       return (
         <div role="alert">
-          There was an error: <pre style={{whiteSpace: 'normal'}}>{error.message}</pre>
+          There was an error: <pre style={{whiteSpace: 'normal'}}>{state.error.message}</pre>
         </div>
       );
     default: 
