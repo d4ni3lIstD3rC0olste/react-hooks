@@ -4,6 +4,7 @@
 import * as React from 'react';
 //import { number } from 'yargs';
 import { fetchPokemon, PokemonInfoFallback, PokemonDataView, PokemonForm } from '../pokemon';
+import { ErrorBoundary } from 'react-error-boundary';
 
 function PokemonInfo({pokemonName}) {
   // 🐨 Have state for the pokemon (null)
@@ -54,14 +55,18 @@ function PokemonInfo({pokemonName}) {
     case 'resolved':
       return <PokemonDataView pokemon={state.pokemon} />;
     case 'rejected':
-      return (
-        <div role="alert">
-          There was an error: <pre style={{whiteSpace: 'normal'}}>{state.error.message}</pre>
-        </div>
-      );
+      throw new Error(state.error.message);
     default: 
       return 'Submit a pokemon';
   }
+}
+
+function ErrorFallback({error}) {
+  return (
+    <div role="alert">
+      There was an error: <pre style={{whiteSpace: 'normal'}}>{error.message}</pre>
+    </div>
+  );
 }
 
 function App() {
@@ -76,7 +81,9 @@ function App() {
       <PokemonForm pokemonName={pokemonName} onSubmit={handleSubmit} />
       <hr />
       <div className="pokemon-info">
-        <PokemonInfo pokemonName={pokemonName} />
+        <ErrorBoundary FallbackComponent={ErrorFallback} resetKeys={pokemonName}>
+          <PokemonInfo pokemonName={pokemonName} />
+        </ErrorBoundary>
       </div>
     </div>
   )
